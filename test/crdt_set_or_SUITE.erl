@@ -9,6 +9,7 @@
 %% Test cases
 -export(
     [ t_replicate_crud_merge/1
+    , t_serialization/1
     ]).
 
 
@@ -25,6 +26,7 @@ all() ->
 groups() ->
     Tests =
         [ t_replicate_crud_merge
+        , t_serialization
         ],
     Properties = [],
     [{?GROUP, Properties, Tests}].
@@ -81,3 +83,17 @@ t_replicate_crud_merge(_Cfg) ->
 
     % Assert removed unobserved still there
     true  = crdt_set_or:is_member(SetD , ValB).
+
+t_serialization(_Cfg) ->
+    ValToBin = fun (Val) -> Val end,
+    ValOfBin = fun (Bin) -> {ok, Bin} end,
+    ValA = <<"foo">>,
+    ValB = <<"bar">>,
+    Set0       = crdt_set_or:empty(),
+    Set1       = crdt_set_or:add      (Set0   , ValA),
+    Set2       = crdt_set_or:add      (Set1   , ValB),
+    Set3       = crdt_set_or:remove   (Set2   , ValB),
+    SetBin     = crdt_set_or:to_bin   (Set3   , ValToBin),
+    {ok, Set3} = crdt_set_or:of_bin   (SetBin , ValOfBin),
+    true       = crdt_set_or:is_member(Set3   , ValA),
+    false      = crdt_set_or:is_member(Set3   , ValB).
