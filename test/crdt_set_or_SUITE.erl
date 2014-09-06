@@ -45,6 +45,7 @@ t_replicate_crud_merge(_Cfg) ->
     SetA1 = crdt_set_or:empty(),
     false = crdt_set_or:is_member(SetA1, ValA),
     SetA2 = crdt_set_or:add      (SetA1, ValA),
+    SetA2 = crdt_set_or:add      (SetA2, ValA),  % Should have no effect
     true  = crdt_set_or:is_member(SetA2, ValA),
 
     % Replicate
