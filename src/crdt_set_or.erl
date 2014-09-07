@@ -114,20 +114,42 @@ to_bin(#t{members=Mems, tombstones=Tombs}, ValueToBin) ->
 -spec of_bin(binary(), fun( (binary()) -> A )) ->
     hope_result:t(t(A), parsing_error()).
 of_bin(Bin, BinToVal) ->
-    % TODO: Error handling
-    Props = jsx:decode(Bin),
-    {some, MemsProps}  = hope_kv_list:get(Props, ?FIELD_MEMBERS),
-    {some, TombsProps} = hope_kv_list:get(Props, ?FIELD_TOMBSTONES),
-    MemOfProps =
-        fun (P) ->
-            {ok, Member} = member_of_props(P, BinToVal),
-            Member
+    Decode = hope_result:lift_exn(fun jsx:decode/1),
+    Validate =
+        fun (Props) ->
+            FieldsRequired =
+                [ ?FIELD_MEMBERS
+                , ?FIELD_TOMBSTONES
+                ],
+            case hope_kv_list:validate_unique_presence(Props, FieldsRequired)
+            of  {ok, ok}     -> {ok, Props}
+            ;   {error, _}=E -> E
+            end
         end,
-    T = #t
-    { members    = lists:map(MemOfProps, MemsProps)
-    , tombstones = lists:map(MemOfProps, TombsProps)
-    },
-    {ok, T}.
+    Construct =
+        fun (Props) ->
+            {some, MemsProps}  = hope_kv_list:get(Props, ?FIELD_MEMBERS),
+            {some, TombsProps} = hope_kv_list:get(Props, ?FIELD_TOMBSTONES),
+            MemOfProps =
+                fun (P) ->
+                    {ok, Member} = member_of_props(P, BinToVal),
+                    Member
+                end,
+            T = #t
+            { members    = lists:map(MemOfProps, MemsProps)
+            , tombstones = lists:map(MemOfProps, TombsProps)
+            },
+            {ok, T}
+        end,
+    Steps =
+        [ Decode
+        , Validate
+        , Construct
+        ],
+    case hope_result:pipe(Steps, Bin)
+    of  {ok, _}=Ok     -> Ok
+    ;   {error, Error} -> {error, {parsing_error, Error}}
+    end.
 
 -spec member_to_props(member(A), fun( (A) -> binary() )) ->
     [{binary(), binary()}].
@@ -142,12 +164,27 @@ member_to_props(#member{value=V, id = <<ID/binary>>}, ValueToBin) ->
                 | {value_parsing_failure, B}
        .
 member_of_props(Props, BinToVal) ->
-    % TODO: Error handling
-    {some, ValBin} = hope_kv_list:get(Props, ?FIELD_VALUE),
-    {some, ID}     = hope_kv_list:get(Props, ?FIELD_ID),
-    {ok, Val} = BinToVal(ValBin),
-    Member = #member
-    { value = Val
-    , id    = ID
-    },
-    {ok, Member}.
+    Validate =
+        fun (ok) ->
+            FieldsRequired =
+                [ ?FIELD_VALUE
+                , ?FIELD_ID
+                ],
+            hope_kv_list:validate_unique_presence(Props, FieldsRequired)
+        end,
+    Construct =
+        fun (ok) ->
+            {some, ValBin} = hope_kv_list:get(Props, ?FIELD_VALUE),
+            {some, ID}     = hope_kv_list:get(Props, ?FIELD_ID),
+            {ok, Val} = BinToVal(ValBin),
+            Member = #member
+            { value = Val
+            , id    = ID
+            },
+            {ok, Member}
+        end,
+    Steps =
+        [ Validate
+        , Construct
+        ],
+    hope_result:pipe(Steps, ok).

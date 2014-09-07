@@ -97,4 +97,7 @@ t_serialization(_Cfg) ->
     SetBin     = crdt_set_or:to_bin   (Set3   , ValToBin),
     {ok, Set3} = crdt_set_or:of_bin   (SetBin , ValOfBin),
     true       = crdt_set_or:is_member(Set3   , ValA),
-    false      = crdt_set_or:is_member(Set3   , ValB).
+    false      = crdt_set_or:is_member(Set3   , ValB),
+
+    BadBin = <<"{\"foo\": []}">>,
+    {error, {parsing_error, _}} = crdt_set_or:of_bin(BadBin , ValOfBin).
