@@ -140,6 +140,7 @@ of_bin(Bin, BinToVal) ->
             {some, TombsProps} = hope_kv_list:get(Props, ?FIELD_TOMBSTONES),
             MemOfProps =
                 fun (P) ->
+                    % TODO: Handle errors
                     {ok, Member} = member_of_props(P, BinToVal),
                     Member
                 end,
