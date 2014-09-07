@@ -119,7 +119,7 @@ to_bin(#t{members=Mems, tombstones=Tombs}, ValueToBin) ->
         ],
     jsx:encode(Props).
 
--spec of_bin(binary(), fun( (binary()) -> A )) ->
+-spec of_bin(binary(), fun( (binary()) -> hope_result:t(A, _B) )) ->
     hope_result:t(t(A), parsing_error()).
 of_bin(Bin, BinToVal) ->
     Decode = hope_result:lift_exn(fun jsx:decode/1),
