@@ -150,6 +150,11 @@ of_bin(Bin, BinToVal) ->
     ;   {error, Error} -> {error, {parsing_error, Error}}
     end.
 
+
+%% ============================================================================
+%% Helpers
+%% ============================================================================
+
 -spec bins_to_vals([binary()], fun((binary()) -> hope_result:t(A, B))) ->
     hope_result:t([A], B).
 bins_to_vals(Bins, BinToVal) ->
