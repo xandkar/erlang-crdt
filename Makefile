@@ -54,7 +54,7 @@ clean_app:
 	@rm -rf ebin/
 
 dialyze:
-	@dialyzer deps/*/ebin ebin
+	@dialyzer deps/*/ebin ebin test/*.beam
 
 test:
 	@rebar ct skip_deps=true --verbose=0
