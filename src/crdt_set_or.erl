@@ -1,5 +1,13 @@
 %%%----------------------------------------------------------------------------
 %%% Observed-Remove Set (OR-Set)
+%%% > The intuition is to tag each added element uniquely, without exposing the
+%%% > unique tags in the interface. When removing an element, all associated
+%%% > unique tags observed at the source replica are removed, and only those.
+%%%
+%%% Marc Shapiro, Nuno Preguiça, Carlos Baquero, and Marek Zawirski.
+%%% "A comprehensive study of Convergent and Commutative Replicated Data Types"
+%%% Rapport de recherche 7506, Institut Nat. de la Recherche en Informatique et
+%%% Automatique (INRIA), Rocquencourt, France, January 2011.
 %%%----------------------------------------------------------------------------
 -module(crdt_set_or).
 
