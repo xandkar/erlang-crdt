@@ -84,8 +84,13 @@ t_serialization(_Cfg) ->
     Set1       = ?set_module:add      (Set0   , ValA),
     Set2       = ?set_module:add      (Set1   , ValB),
     Set3       = ?set_module:remove   (Set2   , ValB),
+
+    SetProps   = ?set_module:to_props (Set3     , ValToBin),
+    {ok, Set3} = ?set_module:of_props (SetProps , ValOfBin),
+
     SetBin     = ?set_module:to_bin   (Set3   , ValToBin),
     {ok, Set3} = ?set_module:of_bin   (SetBin , ValOfBin),
+
     true       = ?set_module:is_member(Set3   , ValA),
     false      = ?set_module:is_member(Set3   , ValB),
 

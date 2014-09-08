@@ -22,6 +22,8 @@
     , merge/2
     , to_bin/2
     , of_bin/2
+    , to_props/2
+    , of_props/2
     ]).
 
 
@@ -91,30 +93,44 @@ merge(TA, TB) ->
 
 -spec to_bin(t(A), fun((A) -> binary())) ->
     binary().
-to_bin(#t{members=Members, tombstones=Tombstones}, ValueToBin) ->
-    Props =
-        [ {?FIELD_MEMBERS    , lists:map(ValueToBin, Members)}
-        , {?FIELD_TOMBSTONES , lists:map(ValueToBin, Tombstones)}
-        ],
+to_bin(#t{}=T, ValueToBin) ->
+    Props = to_props(T, ValueToBin),
     jsx:encode(Props).
 
 -spec of_bin(binary(), fun( (binary()) -> hope_result:t(A, _B) )) ->
     hope_result:t(t(A), parsing_error()).
 of_bin(Bin, BinToVal) ->
     Decode = hope_result:lift_exn(fun jsx:decode/1),
+    Construct = fun (Props) -> of_props(Props, BinToVal) end,
+    Steps =
+        [ Decode
+        , Construct
+        ],
+    case hope_result:pipe(Steps, Bin)
+    of  {ok    , _}=Ok -> Ok
+    ;   {error , E}    -> {error, {parsing_error, E}}
+    end.
+
+-spec to_props(t(A), fun((A) -> binary())) ->
+    binary().
+to_props(#t{members=Members, tombstones=Tombstones}, ValueToBin) ->
+    [ {?FIELD_MEMBERS    , lists:map(ValueToBin, Members)}
+    , {?FIELD_TOMBSTONES , lists:map(ValueToBin, Tombstones)}
+    ].
+
+-spec of_props(binary(), fun((binary()) -> hope_result:t(A, _B))) ->
+    hope_result:t(t(A), parsing_error()).
+of_props(Props, BinToVal) ->
     Validate =
-        fun (Props) ->
+        fun (ok) ->
             FieldsRequired =
                 [ ?FIELD_MEMBERS
                 , ?FIELD_TOMBSTONES
                 ],
-            case hope_kv_list:validate_unique_presence(Props, FieldsRequired)
-            of  {ok, ok}     -> {ok, Props}
-            ;   {error, _}=E -> E
-            end
+            hope_kv_list:validate_unique_presence(Props, FieldsRequired)
         end,
     Construct =
-        fun (Props) ->
+        fun (ok) ->
             {some, MemberBins}    = hope_kv_list:get(Props, ?FIELD_MEMBERS),
             {some, TombstoneBins} = hope_kv_list:get(Props, ?FIELD_TOMBSTONES),
             ParseMembers = fun (ok) -> bins_to_vals(MemberBins, BinToVal) end,
@@ -141,13 +157,12 @@ of_bin(Bin, BinToVal) ->
             hope_result:pipe(Steps, ok)
         end,
     Steps =
-        [ Decode
-        , Validate
+        [ Validate
         , Construct
         ],
-    case hope_result:pipe(Steps, Bin)
-    of  {ok, _}=Ok     -> Ok
-    ;   {error, Error} -> {error, {parsing_error, Error}}
+    case hope_result:pipe(Steps, ok)
+    of  {ok   , _}=Ok -> Ok
+    ;   {error, _}=Er -> Er
     end.
 
 
