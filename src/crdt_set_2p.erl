@@ -32,10 +32,16 @@
     , tombstones
     }).
 
--opaque t(A) ::
-    #t
-    { members    :: [A]
-    , tombstones :: [A]
+%% t() is really meant to be opaque, but alas - Dialyzer does not (yet) support
+%% polymorphic opaque types :(
+-type t(A) ::
+    % We define the structure of t/1 using it's runtime representation so that
+    % Dialyzer can track the parameter it was initialized with.
+    { t
+    % !!! IMPORTANT !!!
+    % The bellow fields MUST be in the same order as in above record definition
+    , [A]  % members
+    , [A]  % tombstones
     }.
 
 -type parsing_error() ::
