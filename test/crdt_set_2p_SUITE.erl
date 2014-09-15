@@ -99,4 +99,7 @@ t_serialization(_Cfg) ->
 
     ValOfBin2 = fun (<<"good">> = V) -> {ok, V}; (_) -> {error, bad_value} end,
     BadBin2 = <<"{\"members\": [\"good\"], \"tombstones\": [\"bad\"]}">>,
-    {error, {parsing_error, _}} = ?set_module:of_bin(BadBin2, ValOfBin2).
+    {error, {parsing_error, _}} = ?set_module:of_bin(BadBin2, ValOfBin2),
+
+    BadBin3 = <<"null">>,
+    {error, {parsing_error, not_a_json_object}} = ?set_module:of_bin(BadBin3, ValOfBin).

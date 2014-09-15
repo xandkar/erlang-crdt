@@ -104,6 +104,9 @@ of_bin(Bin, BinToVal) ->
     Construct = fun (Props) -> of_props(Props, BinToVal) end,
     Steps =
         [ Decode
+        , fun (L) when is_list(L) -> {ok, L}
+          ;   (_)                 -> {error, not_a_json_object}
+          end
         , Construct
         ],
     case hope_result:pipe(Steps, Bin)
