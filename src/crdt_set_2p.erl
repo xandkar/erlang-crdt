@@ -121,7 +121,7 @@ of_bin(Bin, BinToVal) ->
     end.
 
 -spec to_props(t(A), fun((A) -> binary())) ->
-    binary().
+    [{binary(), [binary()]}].
 to_props(#t{members=Members, tombstones=Tombstones}, ValueToBin) ->
     [ {?FIELD_MEMBERS    , lists:map(ValueToBin, Members)}
     , {?FIELD_TOMBSTONES , lists:map(ValueToBin, Tombstones)}
@@ -186,7 +186,7 @@ bins_to_vals(Bins, BinToVal) ->
     hope_result:pipe(Steps, []).
 
 -spec bin_to_bin_parser_accumulator(binary(), BinToVal) ->
-    hope_result:t(ParseAcc, B)
+    ParseAcc
     when BinToVal :: fun(( binary() ) -> hope_result:t( A , B))
        , ParseAcc :: fun(([binary()]) -> hope_result:t([A], B))
        .
