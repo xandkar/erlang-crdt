@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ibnfirnas/erlang-crdt.svg?branch=master)](https://travis-ci.org/ibnfirnas/erlang-crdt)
+[![Build Status](https://travis-ci.org/xandkar/erlang-crdt.svg?branch=master)](https://travis-ci.org/xandkar/erlang-crdt)
 
 erlang-crdt
 ===========
